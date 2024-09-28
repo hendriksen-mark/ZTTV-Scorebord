@@ -1,0 +1,43 @@
+num args: 8, on url: /sbsetting 
+args: brightness = 255
+args: speed = 35
+args: clubid = 0
+args: reset = 0
+args: monochrome = 0
+args: mirrored = 1
+args: uuid = ef5b052670964771
+args: msgid = 0
+
+num args: 3, on url: /sblogo 
+args: logo = 1
+args: uuid = ef5b052670964771
+args: msgid = 1
+
+num args: 7, on url: /sbdata 
+args: players[0][name] = thuis speler
+args: players[1][name] = uit speler
+args: players[2][name] = thuis partner
+args: players[3][name] = uit partner
+args: revert = 0
+args: uuid = ef5b052670964771
+args: msgid = 2
+
+num args: 18, on url: /sbdata 
+args: game[started] = 0
+args: game[score1] = 0
+args: game[score2] = 0
+args: game[setscore1] = 0
+args: game[setscore2] = 0
+args: game[serve] = 1
+args: game[dbl] = 0
+args: game[rotate] = 0
+args: game[intimer] = 3
+args: game[timerclock] = 120
+args: game[timeout1] = 0
+args: game[timeout2] = 0
+args: game[penalty1] = 0
+args: game[penalty2] = 0
+args: game[timerule] = 0
+args: revert = 0
+args: uuid = ef5b052670964771
+args: msgid = 4
