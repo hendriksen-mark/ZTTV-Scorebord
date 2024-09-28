@@ -16,15 +16,24 @@ void setup() {
   wifiManager.setConnectTimeout(30);
   WiFi.hostname(PROJECT_NAME);
 
-  server.on("/sbsetting", sbsetting);
-  server.on("/sblogo", sblogo);
-  server.on("/sbdata", sbdata);
+  //server.on("/sbsetting", sbsetting);
+  //server.on("/sblogo", sblogo);
+  //server.on("/sbdata", sbdata);
+  server.onNotFound(handleNotFound);
 
   server.begin();
 }
 
 void loop() {
   server.handleClient();
+}
+
+void handleNotFound() {
+  Serial.printf("method: %s, num args: %d, on url: %s \n",(server.method() == HTTP_GET) ? "GET" : "POST", server.args(), server.uri());
+  for (int i = 0; i < server.args(); i++) {
+    Serial.printf("args: %s = %s\n", server.argName(i).c_str(), server.arg(i).c_str());
+  }
+  server.send(200, "text/plain", "test headers");
 }
 
 void sbsetting() {
