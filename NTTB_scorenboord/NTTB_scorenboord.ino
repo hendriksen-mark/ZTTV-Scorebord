@@ -1,8 +1,8 @@
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
+#include <WiFi.h>
+#include <WebServer.h>
 #include <WiFiManager.h>
 
-ESP8266WebServer server(80);
+WebServer server(80);
 
 #define PROJECT_NAME "NTTB"
 
