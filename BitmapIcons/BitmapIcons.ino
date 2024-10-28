@@ -11,7 +11,7 @@
 
 
 /*--------------------- RGB DISPLAY PINS -------------------------*/
-#define R1_PIN 36
+#define R1_PIN 33
 #define G1_PIN 22
 #define B1_PIN 26
 #define R2_PIN 18
@@ -115,7 +115,7 @@ int current_icon = 0;
 static int num_icons = 22;
 
 static char icon_name[22][30] = { 
-"cloud_moon_bits"};/*,
+"cloud_moon_bits",
 "cloud_sun_bits",
 "clouds_bits",
 "cloud_wind_moon_bits",
@@ -136,10 +136,9 @@ static char icon_name[22][30] = {
 "snow_sun_bits",
 "snow_bits",
 "sun_bits",
-"wind_bits" };*/
+"wind_bits" };
 
-static char *icon_bits[22] = { 
-cloud_moon_bits};/*,
+static char *icon_bits[22] = { cloud_moon_bits,
 cloud_sun_bits,
 clouds_bits,
 cloud_wind_moon_bits,
@@ -160,7 +159,7 @@ snow_moon_bits,
 snow_sun_bits,
 snow_bits,
 sun_bits,
-wind_bits};*/
+wind_bits};
 
 
 
@@ -193,23 +192,13 @@ void setup() {
 
 void loop() {
 
-  for (int r=0; r < 255; r++ )
-  {
-    drawXbm565(0,0,64,32, wifi_image1bit, dma_display->color565(r,0,0));  
-    delay(10);
-  }
+  // Loop through Weather Icons
+  Serial.print("Showing icon ");
+  Serial.println(icon_name[current_icon]);
+  drawXbm565(0,0, 32, 32, icon_bits[current_icon]);
 
+  current_icon = (current_icon  +1 ) % num_icons;
   delay(2000);
   dma_display->clearScreen();
-
-  // Loop through Weather Icons
-  //Serial.print("Showing icon ");
-  //Serial.println(icon_name[current_icon]);
-  //drawXbm565(0,0, 32, 32, icon_bits[current_icon]);
-  //drawXbm565(0,0, 64, 32, cloud_moon_bits);
-
-  //current_icon = (current_icon  +1 ) % num_icons;
-  //delay(2000);
-  //dma_display->clearScreen();
   
 }
