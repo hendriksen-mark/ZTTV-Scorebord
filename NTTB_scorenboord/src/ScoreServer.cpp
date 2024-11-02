@@ -51,11 +51,6 @@ void ScoreServer::sbdata()
 			display->printWrapped(webServer.arg(i).substring(pos).c_str());
 		}
 
-		//std::stringstream argStream;
-		//argStream << webServer.argName(i) << " = ";
-		//display->printLine(argStream.str().c_str());
-		//display->printLine(webServer.arg(i).c_str());
-		//Serial.printf("args: %s = %s\n", webServer.argName(i).c_str(), webServer.arg(i).c_str());
 	}
 	for (int i = 0; i < webServer.headers(); i++) 
 	{
@@ -64,41 +59,18 @@ void ScoreServer::sbdata()
 			display->printWrapped(webServer.header(i).substring(pos).c_str());
 		}		
 	}
-	display->printLine("sb: ", webServer.clientContentLength());
-	//delay(500);
-	//int contentLength = webServer.clientContentLength();
-	//if (contentLength > 0)
-	//{
-	//	char buffer[1024] = {};
-	//	while (contentLength > 0)
-	//	{
-	//		unsigned int readSize = min(1023, contentLength);
-	//		webServer.client().read((uint8_t*)buffer, readSize);
-	//		buffer[readSize] = '\0';
-	//		contentLength -= readSize;
-	//		display->printWrapped(buffer);
-	//	}
-	//}
+
 	webServer.send(200, "text/plain", "test headers");
 }
 
 
 void ScoreServer::onUpload()
 {
-	//const auto& upload = webServer.upload();
-	//if (&upload == nullptr)
-	//{
-	//	display->printLine("upl == null");
-	//	delay(500);
-	//	if (&webServer.raw() == nullptr)
-	//		display->printLine("raw == null");
 	auto client = webServer.client();
 	if (client.connected())
 	{
-		//display->printLine("cl conn.");
-		//delay(500);
 		int available = webServer.client().available();
-		//display->printLine("av: ", available);
+
 		if (available > 0)
 		{
 			int readMax = min(available, 1436);
@@ -117,27 +89,7 @@ void ScoreServer::onUpload()
 			}
 		}
 	}
-	//	delay(500);
-	//	return;
-	//}
 
-	//delay(2000);
-	//switch (upload.status)
-	//{
-	//	case HTTPUploadStatus::UPLOAD_FILE_START:	display->printLine("File Start"); break;
-	//	case HTTPUploadStatus::UPLOAD_FILE_END:		display->printLine("File End"); break;
-	//	case HTTPUploadStatus::UPLOAD_FILE_WRITE:	display->printLine("File Write"); break;
-	//	case HTTPUploadStatus::UPLOAD_FILE_ABORTED:	display->printLine("File Abort"); break;
-	//}
-	//unsigned int uploadSize = upload.currentSize;
-	//display->printLine("s: ", uploadSize);
-	//delay(2000);
-	//memcpy(postBuffer, upload.buf, uploadSize);
-	//display->printLine("mcpy Done");
-	//delay(2000);
-	//postBuffer[uploadSize] = '\0';
-	//display->printLine("Print Wrap");
-	//display->printWrapped(postBuffer);
 }
 
 

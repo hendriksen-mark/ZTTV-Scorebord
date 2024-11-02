@@ -47,38 +47,6 @@ uint16_t Display::colorWheel(uint8_t pos)
 }
 
 
-void Display::testSequence()
-{
-	panel->fillScreen(colors.white);
-	// fix the screen with green
-	panel->fillRect(0, 0, panel->width(), panel->height(), panel->color444(0, 15, 0));
-	delay(500);
-
-	// draw a box in yellow
-	panel->drawRect(0, 0, panel->width(), panel->height(), panel->color444(15, 15, 0));
-	delay(500);
-
-	// draw an 'X' in red
-	panel->drawLine(0, 0, panel->width() - 1, panel->height() - 1, panel->color444(15, 0, 0));
-	panel->drawLine(panel->width() - 1, 0, 0, panel->height() - 1, panel->color444(15, 0, 0));
-	delay(500);
-
-	// draw a blue circle
-	panel->drawCircle(10, 10, 10, panel->color444(0, 0, 15));
-	delay(500);
-
-	// fill a violet circle
-	panel->fillCircle(40, 21, 10, panel->color444(15, 0, 15));
-	delay(500);
-
-	// fill the screen with 'black'
-	panel->fillScreen(panel->color444(0, 0, 0));
-
-	panel->drawPixel(1, 1, colors.red);
-
-}
-
-
 void Display::clear()
 {
 	panel->fillScreen(colors.black);
@@ -120,8 +88,7 @@ void Display::printWrapped(const char* text)
 		return;
 	unsigned int lineWidth = consoleBufferWidth - 1;
 	unsigned int numLines = (textLength - 1) / lineWidth + 1;
-	//if (numLines > consoleBufferLines)
-	//	numLines = consoleBufferLines;
+
 	for (int i = 0; i < numLines; ++i)
 	{
 		unsigned int offset = i * lineWidth;\
@@ -134,7 +101,7 @@ void Display::printWrapped(const char* text)
 		line[consoleBufferWidth] = '\0';
 		printLine(line);
 		if (i >= consoleBufferLines)
-			delay(2000);
+			delay(500);
 	}
 }
 

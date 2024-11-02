@@ -15,8 +15,6 @@ public:
 	// From: https://gist.github.com/davidegironi/3144efdc6d67e5df55438cc3cba613c8	
 	uint16_t colorWheel(uint8_t pos);
 	
-	void testSequence();
-
 	void clear();
 	void printLine(const char* text);
 
