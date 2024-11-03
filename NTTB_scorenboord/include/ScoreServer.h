@@ -22,5 +22,8 @@ private:
 private:	
 	WebServer webServer;
 	Display* display;
-	char postBuffer[1437] = {};
+
+	static constexpr int postBufferSize = 1437;
+
+	char postBuffer[postBufferSize] = {};
 };

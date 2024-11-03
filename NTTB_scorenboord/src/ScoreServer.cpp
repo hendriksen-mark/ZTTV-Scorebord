@@ -73,7 +73,7 @@ void ScoreServer::onUpload()
 
 		if (available > 0)
 		{
-			int readMax = min(available, 1436);
+			int readMax = min(available, postBufferSize - 1);
 			int readCount = client.readBytes(postBuffer, readMax);
 			if (readCount > 0)
 			{
@@ -81,7 +81,6 @@ void ScoreServer::onUpload()
 				std::string body(postBuffer, readCount);
 				std::size_t offset = 0;
 				int score1 = readValue(body, "score1%5D=", offset);
-				offset = 0;
 				int score2 = readValue(body, "score2%5D=", offset);
 				display->printLine(score1, " - ", score2);
 				//delay(5000);
@@ -98,11 +97,12 @@ int ScoreServer::readValue(const std::string& body, const std::string& valueName
 	if (auto pos = body.find(valueName, offset); pos != body.npos)
 	{
 		char* end = nullptr;
-		int value = strtol(&body[pos + valueName.length()], &end, 10);
+		const char* start = &body[pos + valueName.length()];
+		int value = strtol(start, &end, 10);
 		if (end != nullptr)
 		{
-			int readCount = end - &body[offset];
-			offset = offset + valueName.length() + readCount;
+			int readCount = end - start;
+			offset = pos + valueName.length() + readCount;
 		}
 		return value;
 	}	
