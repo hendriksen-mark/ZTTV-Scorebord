@@ -98,7 +98,7 @@ void Display::printWrapped(const char* text)
 			break;
 		memcpy(line, &text[offset], length);
 		line[length] = '\0';
-		line[consoleBufferWidth] = '\0';
+
 		printLine(line);
 		if (i >= consoleBufferLines)
 			delay(500);
