@@ -4,8 +4,9 @@
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include <memory>
 #include <sstream>
+#include "qrcodedisplay.h"
 
-class Display
+class Display : public QRcodeDisplay
 {
 public:
 	Display(unsigned int resX, unsigned int resY, unsigned int numPanels);
@@ -27,6 +28,9 @@ public:
 	}
 
 	void printWrapped(const char* text);
+	void drawPixel(int x, int y, int color);
+	void screenwhite();
+	void screenupdate();
 
 private:
 	void redrawConsole();

@@ -1,5 +1,6 @@
 #include "Display.h"
 #include "ScoreboardPins.h"
+#include "qrencode.h"
 
 using namespace Pins;
 
@@ -25,6 +26,14 @@ Display::Display(unsigned int resX, unsigned int resY, unsigned int numPanels):
 			  panel->color565(255, 0, 0),
 			  panel->color565(0, 255, 0),
  			  panel->color565(0, 0, 255)};
+	this->screenwidth = resX;
+    this->screenheight = resY;
+    int min = screenwidth;
+    if (screenheight<screenwidth)
+        min = screenheight;
+    multiply = min/WD;
+    offsetsX = (screenwidth-(WD*multiply))/2;
+    offsetsY = (screenheight-(WD*multiply))/2;
 }
 
 
@@ -105,6 +114,12 @@ void Display::printWrapped(const char* text)
 	}
 }
 
+void Display::screenwhite() {
+    panel->fillScreen(colors.white);
+}
+
+void Display::screenupdate() {
+}
 
 void Display::redrawConsole()
 {
@@ -117,4 +132,13 @@ void Display::redrawConsole()
 	{
 		panel->println(consoleTextBuffer[i]);
 	}	
+}
+
+void Display::drawPixel(int x, int y, int color) {
+    if(color==1) {
+        color = colors.black;
+    } else {
+        color = colors.white;
+    }
+    panel->drawPixel(x, y, color);
 }

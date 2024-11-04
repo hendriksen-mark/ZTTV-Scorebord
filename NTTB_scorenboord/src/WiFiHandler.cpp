@@ -37,6 +37,7 @@ void WifiHandler::eventHandler(arduino_event_t* event)
 	if (event->event_id == ARDUINO_EVENT_WIFI_AP_START)
 	{
 		debugDisplay->printWrapped(WiFi.softAPIP().toString().c_str());
+		debugDisplay->create("WIFI:S:Scoreboard;T:WPA;P:Scoreboard!;H:false;;");
 	}
 }
 
