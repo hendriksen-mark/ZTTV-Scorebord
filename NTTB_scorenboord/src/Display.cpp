@@ -21,11 +21,14 @@ Display::Display(unsigned int resX, unsigned int resY, unsigned int numPanels):
 	panel->setBrightness8(30); // 0-255
 	panel->clearScreen();
 
-	colors = {panel->color565(0, 0, 0),
-			  panel->color565(255, 255, 255),
-			  panel->color565(255, 0, 0),
-			  panel->color565(0, 255, 0),
- 			  panel->color565(0, 0, 255)};
+	colors = {
+		panel->color565(0, 0, 0),
+		panel->color565(255, 255, 255),
+		panel->color565(255, 0, 0),
+		panel->color565(0, 255, 0),
+		panel->color565(0, 0, 255)
+	};
+
 	this->screenwidth = resX;
     this->screenheight = resY;
     int min = screenwidth;
@@ -140,5 +143,6 @@ void Display::drawPixel(int x, int y, int color) {
     } else {
         color = colors.white;
     }
-    panel->drawPixel(x, y, color);
+    //panel->drawPixel(x, y, color);
+	panel->fillRect(x,y,multiply,multiply,color);
 }
