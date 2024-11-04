@@ -5,10 +5,8 @@
 #include "ScoreServer.h"
 #include "WiFiHandler.h"
 
-
 std::unique_ptr<Display> display = nullptr;
 std::unique_ptr<ScoreServer> scoreServer = nullptr;
-
 
 void setup()
 {

@@ -2,32 +2,31 @@
 #include "Display.h"
 #include <sstream>
 
+String SSID = "Scoreboard";
+String PASS = "Scoreboard!";
+
 WifiHandler::WifiHandler():
 	debugDisplay(nullptr)
 {
 	
 }
 
-
 WifiHandler::~WifiHandler()
 {
 }
-
 
 void WifiHandler::start()
 {
 	WiFi.onEvent(staticEventHandler);
 	WiFi.mode(wifi_mode_t::WIFI_MODE_AP);
-	WiFi.hostname("Scoreboard");
-	WiFi.softAP("Scoreboard", "Scoreboard!", 5);
+	WiFi.hostname(SSID);
+	WiFi.softAP(SSID, PASS, 5);
 }
-
 
 void WifiHandler::setDebugDisplay(Display* display)
 {
 	debugDisplay = display;
 }
-
 
 void WifiHandler::eventHandler(arduino_event_t* event)
 {
@@ -37,16 +36,14 @@ void WifiHandler::eventHandler(arduino_event_t* event)
 	if (event->event_id == ARDUINO_EVENT_WIFI_AP_START)
 	{
 		debugDisplay->printWrapped(WiFi.softAPIP().toString().c_str());
-		debugDisplay->create("WIFI:S:Scoreboard;T:WPA;P:Scoreboard!;H:false;;");
+		debugDisplay->create("WIFI:S:" + SSID + ";T:WPA;P:" + PASS + ";H:false;;");
 	}
 }
-
 
 void WifiHandler::staticEventHandler(arduino_event_t* event)
 {
 	WifiHandler::get().eventHandler(event);
 }
-
 
 WifiHandler& WifiHandler::get()
 {
@@ -56,7 +53,6 @@ WifiHandler& WifiHandler::get()
 	}
 	return *instance;
 }
-
 
 const char* WifiHandler::eventIdToString(arduino_event_id_t id)
 {
@@ -105,6 +101,5 @@ const char* WifiHandler::eventIdToString(arduino_event_id_t id)
 		default: return "unknown event id";
 	}
 }
-
 
 std::unique_ptr<WifiHandler> WifiHandler::instance = nullptr;
