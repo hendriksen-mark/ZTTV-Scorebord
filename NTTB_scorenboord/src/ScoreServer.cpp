@@ -68,6 +68,10 @@ void ScoreServer::update()
 
 void ScoreServer::handleNotFound()
 {
+	Serial.printf("method: %s, num args: %d, on url: %s \n",(webServer.method() == HTTP_GET) ? "GET" : "POST", webServer.args(), webServer.uri());
+	for (int i = 0; i < webServer.args(); i++) {
+		Serial.printf("args: %s = %s\n", webServer.argName(i).c_str(), webServer.arg(i).c_str());
+	}
 	display->printLine("S: not found");
 	webServer.send(200, "text/plain", "test headers");
 }
@@ -82,7 +86,7 @@ void ScoreServer::sbsetting()
 
 void ScoreServer::sblogo()
 {
-	display->printLine("S: sblogo");
+	display->logo();
 	webServer.send(200, "text/plain", "test headers");
 }
 

@@ -1,6 +1,7 @@
 #include "Display.h"
 #include "ScoreboardPins.h"
 #include "qrencode.h"
+#include "ZTTV_64X32.h"
 
 using namespace Pins;
 
@@ -117,17 +118,19 @@ void Display::printWrapped(const char* text)
 	}
 }
 
-void Display::screenwhite() {
+void Display::screenwhite()
+{
     panel->fillScreen(colors.white);
 }
 
-void Display::screenupdate() {
+void Display::screenupdate()
+{
 }
 
 void Display::redrawConsole()
 {
 	clear();
-	panel->setTextSize(0);
+	panel->setTextSize(1);
 	panel->setTextWrap(false);
 	panel->setTextColor(colors.red);
 	panel->setCursor(0, 0);
@@ -135,6 +138,39 @@ void Display::redrawConsole()
 	{
 		panel->println(consoleTextBuffer[i]);
 	}	
+}
+
+void Display::print(String msg, uint16_t color)
+{
+	clear();
+	panel->setTextSize(1);
+	panel->setTextWrap(false);
+	panel->setTextColor(color);
+	panel->setCursor(0, 0);
+	panel->print(msg);
+}
+
+void Display::drawXbm565(int x, int y, int width, int height, const char *xbm, uint16_t color) 
+{
+  if (width % 8 != 0) {
+      width =  ((width / 8) + 1) * 8;
+  }
+    for (int i = 0; i < width * height / 8; i++ ) {
+      unsigned char charColumn = pgm_read_byte(xbm + i);
+      for (int j = 0; j < 8; j++) {
+        int targetX = (i * 8 + j) % width + x;
+        int targetY = (8 * i / (width)) + y;
+        if (bitRead(charColumn, j)) {
+          panel->drawPixel(targetX, targetY, color);
+        }
+      }
+    }
+}
+
+void Display::logo()
+{
+	clear();
+	drawXbm565(0,0,64,32, ZTTV_64X32_bits, (uint16_t)panel->color565(22,102,255));
 }
 
 void Display::drawPixel(int x, int y, int color) {

@@ -20,7 +20,7 @@ void WifiHandler::start()
 	WiFi.onEvent(staticEventHandler);
 	WiFi.mode(wifi_mode_t::WIFI_MODE_AP);
 	WiFi.hostname(SSID);
-	WiFi.softAP(SSID, PASS, 5);
+	WiFi.softAP(SSID, PASS, 5);// + String(random(1000, 9999)), PASS, 5);
 }
 
 void WifiHandler::setDebugDisplay(Display* display)
@@ -30,13 +30,26 @@ void WifiHandler::setDebugDisplay(Display* display)
 
 void WifiHandler::eventHandler(arduino_event_t* event)
 {
+	Serial.println(eventIdToString(event->event_id));
 	if (debugDisplay == nullptr)
 		return;
-	debugDisplay->printWrapped(eventIdToString(event->event_id));
-	if (event->event_id == ARDUINO_EVENT_WIFI_AP_START)
+
+	switch (event->event_id)
 	{
-		debugDisplay->printWrapped(WiFi.softAPIP().toString().c_str());
-		debugDisplay->create("WIFI:S:" + SSID + ";T:WPA;P:" + PASS + ";H:false;;");
+	case ARDUINO_EVENT_WIFI_AP_START:
+	case ARDUINO_EVENT_WIFI_READY:
+	case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
+		debugDisplay->create("WIFI:S:" + WiFi.softAPSSID() + ";T:WPA;P:" + PASS + ";H:false;;");
+		break;
+
+	case ARDUINO_EVENT_WIFI_AP_STACONNECTED:
+	case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
+		debugDisplay->print("Gebruik IP:\n" + String(WiFi.softAPIP().toString().c_str()), debugDisplay->colors.white);
+		break;
+
+	default:
+		//debugDisplay->printWrapped(eventIdToString(event->event_id));
+		break;
 	}
 }
 

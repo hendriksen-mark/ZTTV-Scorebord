@@ -18,6 +18,9 @@ public:
 	
 	void clear();
 	void printLine(const char* text);
+	void print(String msg, uint16_t color);
+	void logo();
+	void drawXbm565(int x, int y, int width, int height, const char *xbm, uint16_t color);
 
 	template<typename ...LogParameterT>
 	void printLine(LogParameterT&& ...parameters)
@@ -32,13 +35,6 @@ public:
 	void screenwhite();
 	void screenupdate();
 
-private:
-	void redrawConsole();
-
-private:
-	HUB75_I2S_CFG::i2s_pins pins;
-	std::unique_ptr<MatrixPanel_I2S_DMA> panel;
-
 	struct Colors
 	{
 		uint16_t black;
@@ -47,6 +43,13 @@ private:
 		uint16_t green;
 		uint16_t blue;
 	} colors;
+
+private:
+	void redrawConsole();
+
+private:
+	HUB75_I2S_CFG::i2s_pins pins;
+	std::unique_ptr<MatrixPanel_I2S_DMA> panel;
 
 	static constexpr unsigned int consoleBufferLines = 4;
 	static constexpr unsigned int consoleBufferWidth = 11;
