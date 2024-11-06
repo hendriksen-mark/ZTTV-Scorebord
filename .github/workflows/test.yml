@@ -22,5 +22,5 @@ jobs:
 
       - name: Build PlatformIO Project
         run: |
-          cd NTTB_scorenboord
+          cd ZTTV_scorenboord
           pio run
