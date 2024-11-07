@@ -11,8 +11,8 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: |
-            ~/NTTB_scorenboord/.cache/pip
-            ~/NTTB_scorenboord/.platformio/.cache
+            ~/ZTTV_scorenboord/.cache/pip
+            ~/ZTTV_scorenboord/.platformio/.cache
           key: ${{ runner.os }}-pio
       - uses: actions/setup-python@v5
         with:
