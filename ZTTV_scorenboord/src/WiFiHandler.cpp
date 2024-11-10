@@ -18,6 +18,9 @@ WifiHandler::~WifiHandler()
 void WifiHandler::start()
 {
 	WiFi.onEvent(staticEventHandler);
+	
+	// Set AP to not claim it functions as a gateway
+	WiFi.softAPConfig(IPAddress(192, 168, 4, 1), IPAddress(), IPAddress(255, 255, 255, 0));
 	WiFi.mode(wifi_mode_t::WIFI_MODE_AP);
 	WiFi.hostname(SSID);
 	WiFi.softAP(SSID, PASS, 5);// + String(random(1000, 9999)), PASS, 5);
