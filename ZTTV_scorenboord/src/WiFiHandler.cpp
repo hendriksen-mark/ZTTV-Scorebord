@@ -1,9 +1,10 @@
 #include "WiFiHandler.h"
 #include "Display.h"
 #include <sstream>
+#include <DebugLog.h>
 
-String SSID = "Scoreboard";
-String PASS = "Scoreboard!";
+String SSID = "ZTTV" + String(random(1000, 9999));
+String PASS = "ZTTV" + String(random(1000, 9999));
 
 WifiHandler::WifiHandler():
 	debugDisplay(nullptr)
@@ -21,9 +22,10 @@ void WifiHandler::start()
 	
 	// Set AP to not claim it functions as a gateway
 	WiFi.softAPConfig(IPAddress(192, 168, 4, 1), IPAddress(), IPAddress(255, 255, 255, 0));
-	WiFi.mode(wifi_mode_t::WIFI_MODE_AP);
+	WiFi.mode(wifi_mode_t::WIFI_MODE_APSTA);
 	WiFi.hostname(SSID);
-	WiFi.softAP(SSID, PASS, 5);// + String(random(1000, 9999)), PASS, 5);
+	WiFi.softAP(SSID, PASS, 5, 0, 1);
+	WiFi.begin(SSID, PASS);
 }
 
 void WifiHandler::setDebugDisplay(Display* display)
@@ -33,7 +35,7 @@ void WifiHandler::setDebugDisplay(Display* display)
 
 void WifiHandler::eventHandler(arduino_event_t* event)
 {
-	Serial.println(eventIdToString(event->event_id));
+	LOG_DEBUG(eventIdToString(event->event_id));
 	if (debugDisplay == nullptr)
 		return;
 
@@ -41,17 +43,39 @@ void WifiHandler::eventHandler(arduino_event_t* event)
 	{
 	case ARDUINO_EVENT_WIFI_AP_START:
 	case ARDUINO_EVENT_WIFI_READY:
+	case ARDUINO_EVENT_WIFI_STA_START:
+		debugDisplay->print("Maak AP:\n" + SSID + "\n" + PASS, debugDisplay->colors.white);//switch between text and qrcode
+		debugDisplay->create("WIFI:S:" + SSID + ";T:WPA;P:" + PASS + ";H:false;;");
+		break;
+
 	case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
-		debugDisplay->create("WIFI:S:" + WiFi.softAPSSID() + ";T:WPA;P:" + PASS + ";H:false;;");
+		WiFi.enableSTA(true);
+		if(WiFi.SSID() == ""){
+			WiFi.begin(SSID, PASS);
+		}
+		break;
+
+	case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+		WiFi.enableAP(true);
+		if(WiFi.softAPSSID() == ""){
+			WiFi.softAP(SSID, PASS, 5, 0, 1);
+		}
 		break;
 
 	case ARDUINO_EVENT_WIFI_AP_STACONNECTED:
 	case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
-		debugDisplay->print("Gebruik IP:\n" + String(WiFi.softAPIP().toString().c_str()), debugDisplay->colors.white);
+		WiFi.enableSTA(false);
+		debugDisplay->print("Gebruik IP:\n" + WiFi.softAPIP().toString(), debugDisplay->colors.white);
+		break;
+
+	case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+	case ARDUINO_EVENT_WIFI_STA_GOT_IP:
+		WiFi.enableAP(false);
+		debugDisplay->print("Gebruik IP:\n" + WiFi.localIP().toString(), debugDisplay->colors.white);
 		break;
 
 	default:
-		//debugDisplay->printWrapped(eventIdToString(event->event_id));
+		debugDisplay->printWrapped(eventIdToString(event->event_id));
 		break;
 	}
 }

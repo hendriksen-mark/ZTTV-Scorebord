@@ -15,6 +15,7 @@ private:
 	void handleNotFound();
 	void sbsetting();
 	void sblogo();
+	void sbbanner();
 	void sbdata();
 	void onUpload();
 

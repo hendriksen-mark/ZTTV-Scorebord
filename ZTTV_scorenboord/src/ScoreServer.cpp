@@ -1,5 +1,6 @@
 #include "ScoreServer.h"
 #include "Display.h"
+#include <DebugLog.h>
 
 #include <sstream>
 /*
@@ -46,6 +47,13 @@ args: game[timerule] = 0
 args: revert = 0
 args: uuid = ef5b052670964771
 args: msgid = 4
+
+num args: 5 ,on url: /sbbanner
+args: size = 3
+args: text = Welkom
+args: color = 7
+args: uuid = ef5b052670964771
+args: msgid = 2
 */
 
 ScoreServer::ScoreServer(Display* display):
@@ -54,6 +62,7 @@ ScoreServer::ScoreServer(Display* display):
 {
 	webServer.on("/sbsetting", [this](){sbsetting();});
 	webServer.on("/sblogo", [this](){sblogo();});
+	webServer.on("/sbbanner", [this](){sbbanner();});
 	webServer.on("/sbdata", HTTPMethod::HTTP_POST, [this](){sbdata();}, [this](){onUpload();});
 	webServer.onNotFound([this](){handleNotFound();});
 	webServer.begin();
@@ -68,9 +77,9 @@ void ScoreServer::update()
 
 void ScoreServer::handleNotFound()
 {
-	Serial.printf("method: %s, num args: %d, on url: %s \n",(webServer.method() == HTTP_GET) ? "GET" : "POST", webServer.args(), webServer.uri());
+	LOG_DEBUG("method:", (webServer.method() == HTTP_GET) ? "GET" : "POST", ", num args:", webServer.args(), ",on url:", webServer.uri());
 	for (int i = 0; i < webServer.args(); i++) {
-		Serial.printf("args: %s = %s\n", webServer.argName(i).c_str(), webServer.arg(i).c_str());
+		LOG_DEBUG("args:", webServer.argName(i).c_str(), "=" , webServer.arg(i).c_str());
 	}
 	display->printLine("S: not found");
 	webServer.send(200, "text/plain", "test headers");
@@ -79,13 +88,31 @@ void ScoreServer::handleNotFound()
 
 void ScoreServer::sbsetting()
 {
+	LOG_DEBUG("method:", (webServer.method() == HTTP_GET) ? "GET" : "POST", ", num args:", webServer.args(), ",on url:", webServer.uri());
+	for (int i = 0; i < webServer.args(); i++) {
+		LOG_DEBUG("args:", webServer.argName(i).c_str(), "=" , webServer.arg(i).c_str());
+	}
 	display->printLine("S: sbsetting");
+	webServer.send(200, "text/plain", "test headers");
+}
+
+void ScoreServer::sbbanner()
+{
+	LOG_DEBUG("method:", (webServer.method() == HTTP_GET) ? "GET" : "POST", ", num args:", webServer.args(), ",on url:", webServer.uri());
+	for (int i = 0; i < webServer.args(); i++) {
+		LOG_DEBUG("args:", webServer.argName(i).c_str(), "=" , webServer.arg(i).c_str());
+	}
+	display->printLine("S: sbbanner");
 	webServer.send(200, "text/plain", "test headers");
 }
 
 
 void ScoreServer::sblogo()
 {
+	LOG_DEBUG("method:", (webServer.method() == HTTP_GET) ? "GET" : "POST", ", num args:", webServer.args(), ",on url:", webServer.uri());
+	for (int i = 0; i < webServer.args(); i++) {
+		LOG_DEBUG("args:", webServer.argName(i).c_str(), "=" , webServer.arg(i).c_str());
+	}
 	display->logo();
 	webServer.send(200, "text/plain", "test headers");
 }
@@ -93,6 +120,10 @@ void ScoreServer::sblogo()
 
 void ScoreServer::sbdata()
 {
+	LOG_DEBUG("method:", (webServer.method() == HTTP_GET) ? "GET" : "POST", ", num args:", webServer.args(), ",on url:", webServer.uri());
+	for (int i = 0; i < webServer.args(); i++) {
+		LOG_DEBUG("args:", webServer.argName(i).c_str(), "=" , webServer.arg(i).c_str());
+	}
 	for (int i = 0; i < webServer.args(); i++) 
 	{
 		if (int pos = webServer.arg(i).indexOf("stand"); pos >= 0)

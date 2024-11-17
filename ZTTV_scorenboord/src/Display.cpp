@@ -144,7 +144,7 @@ void Display::print(String msg, uint16_t color)
 {
 	clear();
 	panel->setTextSize(1);
-	panel->setTextWrap(false);
+	panel->setTextWrap(true);
 	panel->setTextColor(color);
 	panel->setCursor(0, 0);
 	panel->print(msg);
