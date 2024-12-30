@@ -1,6 +1,10 @@
 name: PlatformIO CI
 
-on: [push]
+on: 
+  push:
+    paths:
+      - "ZTTV_scorenboord/**"
+      - ".github/workflows/test.yml"
 
 jobs:
   build:
