@@ -1,7 +1,7 @@
 """
 Dit script genereert een schema voor het spelen van wedstrijden in een groep van spelers.
 Het schema dat gegenereerd wordt is gebaseerd op de lay-out van de planning van de TTAPP.
-Het schema wordt gegenereerd op basis van de locaties en beschikbaarheid van de spelers.
+Het schema wordt gegenereerd op basis van de speel locaties en beschikbaarheid van de spelers.
 Het script ondersteunt verschillende game types en kan worden aangepast voor andere aantallen spelers per game.(duo: 2, trio: 3, squad: 4)
 Het script houdt rekening met het aantal wedstrijden dat een speler kan spelen en het maximale aantal opeenvolgende wedstrijden dat een speler kan spelen.
 Het script genereert een schema voor het seizoen en toont de resultaten in een tabel, inclusief statistieken voor elke speler.
@@ -17,7 +17,7 @@ Of sla de code op als een Python bestand en voer het uit in een Python omgeving.
 
 game_type = "duo" # duo, trio(regulier), squad(landelijk)
 
-locations = ["UIT1", "THUIS1", "UIT2", "THUIS2", "UIT3", "THUIS3", "UIT4", "THUIS4", "UIT5", "THUIS5"]
+locations = ["UIT10", "THUIS1", "UIT2", "THUIS2", "UIT3", "THUIS3", "UIT4", "THUIS4", "UIT5", "THUIS5"]
 
 availability = {
     "Speler1": [True, True, True, True, True, True, True, True, True, True],
@@ -50,6 +50,7 @@ import random
 from typing import List, Dict
 
 code_runs = 0
+MAX_CODE_RUNS = 2000
 
 def create_schedule(locations: List[str], availability: Dict[str, List[bool]], required_players: int, max_consecutive_games: int) -> Dict[str, List[str]]:
     """
@@ -67,7 +68,7 @@ def create_schedule(locations: List[str], availability: Dict[str, List[bool]], r
     global code_runs
     home_locations = [loc for loc in locations if "THUIS" in loc]
     
-    while True:
+    while code_runs < MAX_CODE_RUNS:
         schedule = {loc: [] for loc in locations}
         player_matches = {player: 0 for player in availability}
         home_away_count = {player: {"home": 0, "away": 0} for player in availability}
@@ -91,6 +92,7 @@ def create_schedule(locations: List[str], availability: Dict[str, List[bool]], r
         except ValueError:
             code_runs += 1
             continue
+    raise RuntimeError("Unable to generate a valid schedule. Please adjust the parameters and try again.")
 
 def get_available_players(loc: str, availability: Dict[str, List[bool]], player_matches: Dict[str, int], consecutive_games: Dict[str, int], max_games: int, max_consecutive_games: int) -> List[str]:
     """
@@ -230,7 +232,11 @@ def main() -> None:
     check_locations(locations)
     check_availability_length(locations, availability)
     check_available_players_for_location(locations, availability)
-    schedule = create_schedule(locations, availability, required_players, max_consecutive_games)
+    try:
+        schedule = create_schedule(locations, availability, required_players, max_consecutive_games)
+    except RuntimeError as e:
+        print(str(e))
+        return
     players = list(availability.keys())
     home_away_count = {player: {"home": 0, "away": 0} for player in availability}
     home_locations = [loc for loc in locations if "THUIS" in loc]
