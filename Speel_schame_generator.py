@@ -39,6 +39,9 @@ else:
     max_consecutive_games = 7
     max_games = 9
 
+#total_games = len(locations)
+#total_players = len(availability)
+#max_games = round((total_games * required_players) / total_players)
 
 
 
@@ -155,7 +158,8 @@ def print_schedule_table(schedule: Dict[str, List[str]], players: List[str], hom
         players (List[str]): List of players.
         home_away_count (Dict[str, Dict[str, int]]): Home and away game count for each player.
     """
-    header = "Location".ljust(10) + "".join([player.ljust(10) for player in players])
+    header = "Locatie".ljust(10) + "".join([player.ljust(10) for player in players])
+    print("-" * len(header))
     print(header)
     print("-" * len(header))
     
@@ -165,14 +169,11 @@ def print_schedule_table(schedule: Dict[str, List[str]], players: List[str], hom
             row += ("X".ljust(10) if player in loc_players else "".ljust(10))
         print(row)
     
-    print("\nPlayer Stats:")
-    print("Player".ljust(10) + "Home".ljust(10) + "Away".ljust(10) + "Total".ljust(10))
-    print("-" * 40)
-    for player in players:
-        home = home_away_count[player]["home"]
-        away = home_away_count[player]["away"]
-        total = home + away
-        print(f"{player.ljust(10)}{str(home).ljust(10)}{str(away).ljust(10)}{str(total).ljust(10)}")
+    print("-" * len(header))
+    print("Thuis".ljust(10) + "".join([str(home_away_count[player]["home"]).ljust(10) for player in players]))
+    print("Uit".ljust(10) + "".join([str(home_away_count[player]["away"]).ljust(10) for player in players]))
+    print("Totaal".ljust(10) + "".join([str(home_away_count[player]["home"] + home_away_count[player]["away"]).ljust(10) for player in players]))
+    print("-" * len(header))
 
 def check_availability_length(locations: List[str], availability: Dict[str, List[bool]]) -> None:
     """
@@ -189,29 +190,46 @@ def check_availability_length(locations: List[str], availability: Dict[str, List
         if len(locations) is not len(avail):
             raise ValueError(f"Invoer mismatch voor speler {player}: {len(locations)} locaties, {len(avail)} ingevoerde beschikbaarheden")
 
-def get_available_players_for_location(loc: str, locations: List[str], availability: Dict[str, List[bool]]) -> List[str]:
+def check_available_players_for_location(locations: List[str], availability: Dict[str, List[bool]]) -> List[str]:
     """
-    Get the list of available players for a specific location.
+    Check if there are enough available players for each location.
 
     Args:
-        loc (str): The location.
         locations (List[str]): List of locations.
         availability (Dict[str, List[bool]]): Availability of players.
 
-    Returns:
-        List[str]: List of available players.
+    Raises:
+        ValueError: If there are not enough available players for a location.
     """
-    return [player for player, avail in availability.items() if avail[locations.index(loc)]]
+    for loc in locations:
+        available_players = [player for player, avail in availability.items() if avail[locations.index(loc)]]
+        if len(available_players) < required_players:
+            raise ValueError(f"Niet genoeg spelers beschikbaar voor locatie {loc} ({len(available_players)} beschikbaar, {required_players} nodig)")
+
+def check_locations(locations: List[str]) -> None:
+    """
+    Check if locations are unique and if half of the locations start with "THUIS".
+
+    Args:
+        locations (List[str]): List of locations.
+
+    Raises:
+        ValueError: If locations are not unique or if half of the locations do not start with "THUIS".
+    """
+    if len(locations) != len(set(locations)):
+        raise ValueError("Locaties moeten uniek zijn.")
+    
+    thuis_count = sum(1 for loc in locations if loc.startswith("THUIS"))
+    if thuis_count < len(locations) // 2:
+        raise ValueError("Minimaal de helft van de locaties moet beginnen met 'THUIS'.")
 
 def main() -> None:
     """
     Main function to create and print the schedule.
     """
+    check_locations(locations)
     check_availability_length(locations, availability)
-    for loc in locations:
-        available_players = get_available_players_for_location(loc, locations, availability)
-        if len(available_players) < required_players:
-            raise ValueError(f"Niet genoeg spelers beschikbaar voor locatie {loc} ({len(available_players)} beschikbaar, {required_players} nodig)")
+    check_available_players_for_location(locations, availability)
     schedule = create_schedule(locations, availability, required_players, max_consecutive_games)
     players = list(availability.keys())
     home_away_count = {player: {"home": 0, "away": 0} for player in availability}
@@ -220,7 +238,7 @@ def main() -> None:
         for player in schedule[loc]:
             home_away_count[player]["home" if loc in home_locations else "away"] += 1
     print_schedule_table(schedule, players, home_away_count)
-    print(f"Reschedule: {code_runs}")
+    print(f"Aantal herberekeningen: {code_runs}")
 
 if __name__ == "__main__":
     main()
