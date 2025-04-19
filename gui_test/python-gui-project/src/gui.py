@@ -13,7 +13,7 @@ class GameGUI:
         self.game_type_var = StringVar(master)
         self.game_type_var.set("squad")  # default value
 
-        self.locations = ["UIT1", "THUIS1", "UIT2", "THUIS2", "UIT3", "THUIS3", "UIT4", "THUIS4", "UIT5", "THUIS5"]
+        self.locations = ["THUIS1", "UIT1", "THUIS2", "UIT2", "THUIS3", "UIT3", "THUIS4", "UIT4", "THUIS5", "UIT5"]
 
         self.max_consecutive_games_var = StringVar(master)
         self.max_consecutive_games_var.set(set_max_consecutive_games(self.game_type_var.get()))
@@ -53,6 +53,13 @@ class GameGUI:
         }
 
     def create_availability_grid(self):
+        # Ensure availability lists match the number of locations
+        for player in self.availability:
+            if len(self.availability[player]) < len(self.locations):
+                self.availability[player].extend([True] * (len(self.locations) - len(self.availability[player])))
+            elif len(self.availability[player]) > len(self.locations):
+                self.availability[player] = self.availability[player][:len(self.locations)]
+
         self.grid_labels = {}
         self.availability_vars = {}
         self.player_entries = {}
@@ -132,6 +139,8 @@ class GameGUI:
         player_names = {player: entry.get() for player, entry in self.player_entries.items() if player in self.availability}  # Preserve player names
         location_names = {location: entry.get() for location, entry in self.location_entries.items() if location in self.locations}  # Preserve location names
         self.clear_grid()
+        if self.game_type_var.get() == "beker":
+            self.locations = self.locations[:3]  # Ensure only 3 locations are displayed
         self.create_availability_grid()
         self.add_buttons()
         self.game_type_var.set(game_type)  # Restore the selected game type
@@ -186,7 +195,12 @@ class GameGUI:
         self.max_consecutive_games_var.set(set_max_consecutive_games(selected_game_type))
         self.max_games_var.set(set_max_games(selected_game_type))
         # Update the max values for the dropdown menus
-        self.update_max_values()
+        if selected_game_type == "beker":
+            self.locations = self.locations[:3]  # Limit to 3 locations
+        else:
+            # Restore the original locations if switching from 'beker'
+            self.locations = self.current_config["locations"].copy()
+        self.update_grid()  # Update the grid to reflect the changes
         # Clear the schedule label and back button if they are displayed
         self.schedule_label.grid_remove()
         if hasattr(self, 'back_button') and self.back_button.winfo_exists():
