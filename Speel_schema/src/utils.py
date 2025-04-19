@@ -75,7 +75,7 @@ def create_schedule(
     """
     global code_runs
     home_locations = [loc for loc in locations if "THUIS" in loc]
-    logging.info(f"Generating schedule with locations: {locations}, required_players: {required_players}, max_consecutive_games: {max_consecutive_games}, max_games: {max_games}")
+    logging.debug(f"Generating schedule with locations: {locations}, required_players: {required_players}, max_consecutive_games: {max_consecutive_games}, max_games: {max_games}")
     
     while code_runs < MAX_CODE_RUNS:
         schedule = {loc: [] for loc in locations}
@@ -288,6 +288,7 @@ def main(game_type: str, locations: List[str], availability: Dict[str, List[bool
     check_available_players_for_location(locations, availability)
     try:
         schedule, code_runs = create_schedule(locations, availability, required_players, max_consecutive_games, game_type, max_games)
+        logging.info("Schedule successfully generated.")  # Log success message
     except RuntimeError as e:
         logging.error(str(e))
         return
