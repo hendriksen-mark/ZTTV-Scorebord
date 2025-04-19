@@ -1,6 +1,6 @@
 import logging
 from tkinter import Tk, StringVar, Label, OptionMenu, Frame, Grid, Entry, Button
-from utils import set_required_players, set_max_consecutive_games, set_max_games, create_schedule, check_locations, check_availability_length, check_available_players_for_location, reset_code_runs
+from .utils import set_required_players, set_max_consecutive_games, set_max_games, create_schedule, check_locations, check_availability_length, check_available_players_for_location, reset_code_runs
 
 # Configure logging to include line numbers
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s')
@@ -194,13 +194,15 @@ class GameGUI:
         # Update the default values for max_consecutive_games and max_games based on the selected game type
         self.max_consecutive_games_var.set(set_max_consecutive_games(selected_game_type))
         self.max_games_var.set(set_max_games(selected_game_type))
-        # Update the max values for the dropdown menus
+        
+        # Update the locations based on the selected game type
         if selected_game_type == "beker":
-            self.locations = self.locations[:3]  # Limit to 3 locations
+            self.locations = self.current_config["locations"][:3]  # Limit to 3 locations for "beker"
         else:
-            # Restore the original locations if switching from 'beker'
-            self.locations = self.current_config["locations"].copy()
+            self.locations = self.current_config["locations"].copy()  # Restore the full list of locations
+        
         self.update_grid()  # Update the grid to reflect the changes
+        
         # Clear the schedule label and back button if they are displayed
         self.schedule_label.grid_remove()
         if hasattr(self, 'back_button') and self.back_button.winfo_exists():
@@ -218,10 +220,19 @@ class GameGUI:
     def generate_schedule(self):
         global code_runs
         try:
+            # Ensure locations and availability are consistent
             locations = [entry.get() for entry in self.grid_labels.values()]
             availability = {self.player_entries[player].get(): [var.get() == "Available" for var in vars] for player, vars in self.availability_vars.items()}
-            game_type = self.game_type_var.get()
+            if len(locations) != len(self.locations):
+                raise ValueError("Mismatch between locations and grid entries.")
+            if any(len(avail) != len(locations) for avail in availability.values()):
+                raise ValueError("Mismatch between availability and locations.")
 
+            # Update current_config to reflect the latest changes
+            self.current_config["locations"] = locations.copy()
+            self.current_config["availability"] = {player: avail.copy() for player, avail in availability.items()}
+
+            game_type = self.game_type_var.get()
             required_players = set_required_players(game_type)
             max_consecutive_games = int(self.max_consecutive_games_var.get())
             max_games = int(self.max_games_var.get())
@@ -285,9 +296,11 @@ class GameGUI:
         self.rerun_button.grid(row=len(self.locations) + 7, column=2, columnspan=2)
 
     def rerun_schedule(self):
+        reset_code_runs()  # Reset the code_runs counter
         self.clear_grid()
-        self.locations = self.current_config["locations"]
-        self.availability = self.current_config["availability"]
+        # Restore locations and availability from the current configuration
+        self.locations = self.current_config["locations"].copy()
+        self.availability = {player: avail.copy() for player, avail in self.current_config["availability"].items()}
         self.create_availability_grid()
         self.add_buttons()
         self.generate_schedule()
