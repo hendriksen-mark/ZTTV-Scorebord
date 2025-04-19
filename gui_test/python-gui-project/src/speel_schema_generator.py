@@ -19,15 +19,15 @@ from utils import main
 
 game_type: str = "beker"  # duo, trio(regulier), squad(landelijk), beker
 
-locations = ["UIT1", "THUIS1", "UIT2", "THUIS2", "UIT3", "THUIS3", "UIT4", "THUIS4", "UIT5", "THUIS5", "UIT6", "THUIS6"]
+locations: List[str] = ["UIT1", "THUIS1", "UIT2", "THUIS2", "UIT3", "THUIS3", "UIT4", "THUIS4", "UIT5", "THUIS5", "UIT6", "THUIS6"]
 
+availability: Dict[str, List[bool]] = {
     "Speler1": [True, True, True, True, True, True, True, True, True, True, True, True],
     "Speler2": [True, True, True, True, True, True, True, True, True, True, True, True],
     "Speler3": [True, True, True, True, True, True, True, True, True, True, True, True],
     "speler4": [True, True, True, True, True, True, True, True, True, True, True, True],
     "speler5": [True, True, True, True, True, True, True, True, True, True, True, True],
     "speler6": [True, True, True, True, True, True, True, True, True, True, True, True],
-availability: Dict[str, List[bool]] = {
 }
 
 if __name__ == "__main__":
