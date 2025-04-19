@@ -1,5 +1,5 @@
 from tkinter import Tk
-from gui import GameGUI
+from gui_utils import GameGUI
 
 def main():
     root = Tk()
