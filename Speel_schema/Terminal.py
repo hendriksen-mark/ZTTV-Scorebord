@@ -15,7 +15,7 @@ Of sla de code op als een Python bestand en voer het uit in een Python omgeving.
 """
 
 from typing import List, Dict
-from utils import main
+from src.utils import main
 
 game_type: str = "beker"  # duo, trio(regulier), squad(landelijk), beker
 
