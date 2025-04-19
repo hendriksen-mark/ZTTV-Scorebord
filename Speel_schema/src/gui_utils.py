@@ -240,9 +240,8 @@ class GameGUI:
         
         self.update_grid()  # Update the grid to reflect the changes
         
-        # Clear the schedule label and back button if they are displayed
-        if self.schedule_text_widget:
-            self.schedule_text_widget.grid_remove()
+        # Regenerate and display the schedule
+        self.generate_schedule()
 
     def update_language(self, selected_language):
         """
