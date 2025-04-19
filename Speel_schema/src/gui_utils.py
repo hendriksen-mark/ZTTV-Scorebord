@@ -1,5 +1,5 @@
 import logging
-from tkinter import Tk, StringVar, Label, OptionMenu, Frame, Grid, Entry, Button
+from tkinter import Tk, StringVar, Label, OptionMenu, Frame, Grid, Entry, Button, Text
 from .utils import set_required_players, set_max_consecutive_games, set_max_games, create_schedule, check_locations, check_availability_length, check_available_players_for_location, reset_code_runs
 
 # Configure logging to include line numbers
@@ -39,9 +39,7 @@ class GameGUI:
         self.create_availability_grid()
         self.add_buttons()
 
-        self.schedule_label = Label(self.master, text="", justify="left", anchor="w", width=80)  # Set a fixed width and left alignment
-        self.schedule_label.grid(row=len(self.locations) + 6, column=0, columnspan=6)
-        self.schedule_label.grid_remove()  # Hide the schedule label initially
+        self.schedule_text_widget = None  # Initialize the schedule text widget
 
         # Store the current configuration
         self.current_config = {
@@ -155,11 +153,12 @@ class GameGUI:
         self.update_schedule_label_position()
 
     def update_schedule_label_position(self):
-        self.schedule_label.grid(row=len(self.locations) + 6, column=0, columnspan=6)
+        if self.schedule_text_widget:
+            self.schedule_text_widget.grid(row=len(self.locations) + 6, column=0, columnspan=6)
 
     def clear_grid(self):
         for widget in self.master.winfo_children():
-            if widget != self.schedule_label:
+            if widget != self.schedule_text_widget:  # Preserve the schedule_text_widget
                 widget.destroy()
 
     def add_buttons(self):
@@ -204,7 +203,8 @@ class GameGUI:
         self.update_grid()  # Update the grid to reflect the changes
         
         # Clear the schedule label and back button if they are displayed
-        self.schedule_label.grid_remove()
+        if self.schedule_text_widget:
+            self.schedule_text_widget.grid_remove()
         if hasattr(self, 'back_button') and self.back_button.winfo_exists():
             self.back_button.grid_remove()
         if hasattr(self, 'rerun_button') and self.rerun_button.winfo_exists():
@@ -241,22 +241,40 @@ class GameGUI:
             check_availability_length(locations, availability)
             check_available_players_for_location(locations, availability)
             schedule, code_runs = create_schedule(locations, availability, required_players, max_consecutive_games, game_type, max_games)
+            logging.info("Schedule successfully generated.")  # Log success message
             self.display_schedule(schedule, availability, code_runs)
         except ValueError as e:
             logging.error(f"ValueError: {e}")
-            self.schedule_label.config(text=str(e))
-            self.schedule_label.grid()  # Show the schedule label
+            if self.schedule_text_widget:
+                self.schedule_text_widget.config(state="normal")
+                self.schedule_text_widget.delete("1.0", "end")
+                self.schedule_text_widget.insert("1.0", str(e))
+                self.schedule_text_widget.config(state="disabled")
+                self.schedule_text_widget.grid()
         except RuntimeError as e:
             logging.error(f"RuntimeError: {e}")
             reset_code_runs()  # Reset code_runs after RuntimeError
-            self.schedule_label.config(text=str(e))
-            self.schedule_label.grid()  # Show the schedule label
+            if self.schedule_text_widget:
+                self.schedule_text_widget.config(state="normal")
+                self.schedule_text_widget.delete("1.0", "end")
+                self.schedule_text_widget.insert("1.0", str(e))
+                self.schedule_text_widget.config(state="disabled")
+                self.schedule_text_widget.grid()
         except Exception as e:
             logging.error(f"Unexpected error: {e}")
-            self.schedule_label.config(text=f"Unexpected error: {str(e)}")
-            self.schedule_label.grid()  # Show the schedule label
+            if self.schedule_text_widget:
+                self.schedule_text_widget.config(state="normal")
+                self.schedule_text_widget.delete("1.0", "end")
+                self.schedule_text_widget.insert("1.0", f"Unexpected error: {str(e)}")
+                self.schedule_text_widget.config(state="disabled")
+                self.schedule_text_widget.grid()
 
     def display_schedule(self, schedule, availability, code_runs):
+        # Ensure the schedule_text_widget is initialized and visible
+        if self.schedule_text_widget is None:
+            self.schedule_text_widget = Text(self.master, wrap="none", height=20, width=100)
+        self.schedule_text_widget.grid(row=len(self.locations) + 6, column=0, columnspan=6)
+
         self.clear_grid()
         reset_code_runs()
 
@@ -286,9 +304,13 @@ class GameGUI:
         schedule_text += "-" * len(header) + "\n"
         schedule_text += f"Aantal herberekeningen: {code_runs}"
 
-        self.schedule_label.config(text=schedule_text)
-        self.schedule_label.grid()  # Show the schedule label
+        # Update the Text widget with the schedule
+        self.schedule_text_widget.config(state="normal")  # Enable editing to update the text
+        self.schedule_text_widget.delete("1.0", "end")  # Clear existing text
+        self.schedule_text_widget.insert("1.0", schedule_text)  # Insert new text
+        self.schedule_text_widget.config(state="disabled")  # Disable editing to make it read-only
 
+        # Add navigation buttons
         self.back_button = Button(self.master, text="Back to Config", command=self.show_config)
         self.back_button.grid(row=len(self.locations) + 7, column=0, columnspan=2)
 
@@ -312,7 +334,8 @@ class GameGUI:
         self.game_type_var.set(self.game_type_var.get())  # Restore the selected game type
         self.update_max_values()
         self.update_schedule_label_position()
-        self.schedule_label.grid_remove()  # Hide the schedule label
+        if self.schedule_text_widget:
+            self.schedule_text_widget.grid_remove()  # Hide the schedule text widget
         if hasattr(self, 'back_button') and self.back_button.winfo_exists():
             self.back_button.grid_remove()  # Hide the back button
         if hasattr(self, 'rerun_button') and self.rerun_button.winfo_exists():
