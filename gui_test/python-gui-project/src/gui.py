@@ -1,7 +1,6 @@
 import logging
 from tkinter import Tk, StringVar, Label, OptionMenu, Frame, Grid, Entry, Button
-from speel_schema_generator import create_schedule, check_locations, check_availability_length, check_available_players_for_location, reset_code_runs
-from utils import get_required_players, get_max_consecutive_games, get_max_games
+from utils import set_required_players, set_max_consecutive_games, set_max_games, create_schedule, check_locations, check_availability_length, check_available_players_for_location, reset_code_runs
 
 # Configure logging to include line numbers
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s')
@@ -17,15 +16,15 @@ class GameGUI:
         self.locations = ["UIT1", "THUIS1", "UIT2", "THUIS2", "UIT3", "THUIS3", "UIT4", "THUIS4", "UIT5", "THUIS5"]
 
         self.max_consecutive_games_var = StringVar(master)
-        self.max_consecutive_games_var.set(get_max_consecutive_games(self.game_type_var.get()))
+        self.max_consecutive_games_var.set(set_max_consecutive_games(self.game_type_var.get()))
 
         self.max_games_var = StringVar(master)
-        self.max_games_var.set(get_max_games(self.game_type_var.get()))
+        self.max_games_var.set(set_max_games(self.game_type_var.get()))
 
         self.game_type_label = Label(master, text="Select Game Type:")
         self.game_type_label.grid(row=0, column=0)
 
-        self.game_type_menu = OptionMenu(master, self.game_type_var, "duo", "trio", "squad", command=self.update_display)
+        self.game_type_menu = OptionMenu(master, self.game_type_var, "duo", "trio", "squad", "beker", command=self.update_display)
         self.game_type_menu.grid(row=0, column=1)
 
         self.locations_label = Label(master, text="Locations:")
@@ -122,9 +121,11 @@ class GameGUI:
         if len(self.locations) != len(set(self.locations)):
             raise ValueError("Locaties moeten uniek zijn.")
         
-        thuis_count = sum(1 for loc in self.locations if loc.startswith("THUIS"))
-        if thuis_count < len(self.locations) // 2:
-            raise ValueError("Minimaal de helft van de locaties moet beginnen met 'THUIS'.")
+        # Skip the "THUIS" check for the 'beker' game type
+        if self.game_type_var.get() != "beker":
+            thuis_count = sum(1 for loc in self.locations if loc.startswith("THUIS"))
+            if thuis_count < len(self.locations) // 2:
+                raise ValueError("Minimaal de helft van de locaties moet beginnen met 'THUIS'.")
 
     def update_grid(self):
         game_type = self.game_type_var.get()  # Preserve the selected game type
@@ -156,8 +157,8 @@ class GameGUI:
         self.add_player_button = Button(self.master, text="Add Player", command=self.add_player)
         self.add_player_button.grid(row=len(self.locations) + 4, column=0)
 
-        #self.add_location_button = Button(self.master, text="Add Location", command=self.add_location)
-        #self.add_location_button.grid(row=len(self.locations) + 4, column=1)
+        self.add_location_button = Button(self.master, text="Add Location", command=self.add_location)
+        self.add_location_button.grid(row=len(self.locations) + 4, column=1)
 
         self.generate_button = Button(self.master, text="Generate Schedule", command=self.generate_schedule)
         self.generate_button.grid(row=len(self.locations) + 5, column=0, columnspan=2)
@@ -177,13 +178,13 @@ class GameGUI:
         self.game_type_label = Label(self.master, text="Select Game Type:")
         self.game_type_label.grid(row=0, column=0)
 
-        self.game_type_menu = OptionMenu(self.master, self.game_type_var, "duo", "trio", "squad", command=self.update_display)
+        self.game_type_menu = OptionMenu(self.master, self.game_type_var, "duo", "trio", "squad", "beker", command=self.update_display)
         self.game_type_menu.grid(row=0, column=1)
 
     def update_display(self, selected_game_type):
         # Update the default values for max_consecutive_games and max_games based on the selected game type
-        self.max_consecutive_games_var.set(get_max_consecutive_games(selected_game_type))
-        self.max_games_var.set(get_max_games(selected_game_type))
+        self.max_consecutive_games_var.set(set_max_consecutive_games(selected_game_type))
+        self.max_games_var.set(set_max_games(selected_game_type))
         # Update the max values for the dropdown menus
         self.update_max_values()
         # Clear the schedule label and back button if they are displayed
@@ -207,7 +208,7 @@ class GameGUI:
             availability = {self.player_entries[player].get(): [var.get() == "Available" for var in vars] for player, vars in self.availability_vars.items()}
             game_type = self.game_type_var.get()
 
-            required_players = get_required_players(game_type)
+            required_players = set_required_players(game_type)
             max_consecutive_games = int(self.max_consecutive_games_var.get())
             max_games = int(self.max_games_var.get())
 

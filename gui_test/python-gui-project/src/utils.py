@@ -16,17 +16,18 @@ def get_player_availability(availability: Dict[str, List[bool]]) -> Dict[str, in
 
 def set_required_players(game_type: str) -> None:
     global required_players
-    logging.info(f"game_type: {game_type}")
+    logging.debug(f"game_type: {game_type}")
     if game_type == "duo":
         required_players = 2
     elif game_type == "trio":
         required_players = 3
     elif game_type in ["squad", "beker"]:
         required_players = 4
+    return required_players
 
 def set_max_consecutive_games(game_type: str) -> None:
     global max_consecutive_games
-    logging.info(f"game_type: {game_type}")
+    logging.debug(f"game_type: {game_type}")
     if game_type == "duo":
         max_consecutive_games = 3
     elif game_type == "trio":
@@ -35,10 +36,11 @@ def set_max_consecutive_games(game_type: str) -> None:
         max_consecutive_games = 7
     elif game_type == "beker":
         max_consecutive_games = 2
+    return max_consecutive_games
 
 def set_max_games(game_type: str) -> None:
     global max_games
-    logging.info(f"game_type: {game_type}")
+    logging.debug(f"game_type: {game_type}")
     if game_type == "duo":
         max_games = 5
     elif game_type == "trio":
@@ -47,6 +49,7 @@ def set_max_games(game_type: str) -> None:
         max_games = 9
     elif game_type == "beker":
         max_games = 5
+    return max_games
     
 def create_schedule(
     locations: List[str],
