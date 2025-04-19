@@ -1,6 +1,7 @@
 import logging
 from tkinter import Tk, StringVar, Label, OptionMenu, Frame, Grid, Entry, Button, Text
 from .utils import set_required_players, set_max_consecutive_games, set_max_games, create_schedule, check_locations, check_availability_length, check_available_players_for_location, reset_code_runs
+from .languages import LANGUAGES, get_language, set_language  # Import get_language and set_language
 
 # Configure logging to include line numbers
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s')
@@ -10,8 +11,13 @@ class GameGUI:
         self.master = master
         master.title("Game Availability")
 
+        self.language_var = StringVar(master)
+        self.language_var.set(get_language())  # Use get_language to get the current language
+
+        self.lang = LANGUAGES[get_language()]  # Load language strings dynamically
+
         self.game_type_var = StringVar(master)
-        self.game_type_var.set("squad")  # default value
+        self.game_type_var.set("duo")  # default value
 
         self.locations = ["THUIS1", "UIT1", "THUIS2", "UIT2", "THUIS3", "UIT3", "THUIS4", "UIT4", "THUIS5", "UIT5"]
 
@@ -21,14 +27,7 @@ class GameGUI:
         self.max_games_var = StringVar(master)
         self.max_games_var.set(set_max_games(self.game_type_var.get()))
 
-        self.game_type_label = Label(master, text="Select Game Type:")
-        self.game_type_label.grid(row=0, column=0)
-
-        self.game_type_menu = OptionMenu(master, self.game_type_var, "duo", "trio", "squad", "beker", command=self.update_display)
-        self.game_type_menu.grid(row=0, column=1)
-
-        self.locations_label = Label(master, text="Locations:")
-        self.locations_label.grid(row=1, column=0, sticky="w")
+        self.schedule_text_widget = None  # Initialize the schedule text widget
 
         self.availability = {
             "Speler1": [True, True, True, True, True, True, True, True, True, True],
@@ -36,19 +35,71 @@ class GameGUI:
             "Speler3": [True, True, True, True, True, True, True, True, True, True],
             "speler4": [True, True, True, True, True, True, True, True, True, True],
         }
-        self.create_availability_grid()
-        self.add_buttons()
-
-        self.schedule_text_widget = None  # Initialize the schedule text widget
 
         # Store the current configuration
         self.current_config = {
             "game_type": self.game_type_var.get(),
             "locations": self.locations.copy(),
-            "availability": {player: avail.copy() for player, avail in self.availability.items()},
+            "availability": {
+                "Speler1": [True, True, True, True, True, True, True, True, True, True],
+                "Speler2": [True, True, True, True, True, True, True, True, True, True],
+                "Speler3": [True, True, True, True, True, True, True, True, True, True],
+                "speler4": [True, True, True, True, True, True, True, True, True, True],
+            },
             "max_consecutive_games": self.max_consecutive_games_var.get(),
             "max_games": self.max_games_var.get()
         }
+
+        # Centralized UI creation
+        self.build_ui()
+        self.add_buttons()
+
+        # Perform the first run with default configurations
+        self.generate_schedule()
+
+    def build_ui(self):
+        """
+        Build the UI components for language, game type, and availability.
+        """
+        # Language selection dropdown
+        self.language_label = Label(self.master, text="Select Language:")
+        self.language_label.grid(row=0, column=0, sticky="e", padx=1)
+
+        self.language_menu = OptionMenu(self.master, self.language_var, *LANGUAGES.keys(), command=self.update_language)
+        self.language_menu.grid(row=0, column=1, sticky="w", padx=1)
+
+        # Game type selection dropdown
+        self.game_type_label = Label(self.master, text=self.lang["select_game_type"])
+        self.game_type_label.grid(row=0, column=2, sticky="e", padx=1)
+
+        self.game_type_menu = OptionMenu(self.master, self.game_type_var, "duo", "trio", "squad", "beker", command=self.update_display)
+        self.game_type_menu.grid(row=0, column=3, sticky="w", padx=1)
+
+        # Max consecutive games dropdown
+        self.max_consecutive_games_label = Label(self.master, text=self.lang["max_consecutive_games"])
+        self.max_consecutive_games_label.grid(row=0, column=4, sticky="e", padx=1)
+
+        self.max_consecutive_games_menu = OptionMenu(self.master, self.max_consecutive_games_var, *range(1, len(self.locations) + 1))
+        self.max_consecutive_games_menu.grid(row=0, column=5, sticky="w", padx=1)
+
+        # Max games dropdown
+        self.max_games_label = Label(self.master, text=self.lang["max_games"])
+        self.max_games_label.grid(row=0, column=6, sticky="e", padx=1)
+
+        self.max_games_menu = OptionMenu(self.master, self.max_games_var, *range(1, len(self.locations) + 1))
+        self.max_games_menu.grid(row=0, column=7, sticky="w", padx=1)
+
+        # Locations label
+        self.locations_label = Label(self.master, text=self.lang["locations"])
+        self.locations_label.grid(row=2, column=0, sticky="w", padx=1)  # Adjusted to row 2
+
+        self.create_availability_grid()
+
+    def create_config_section(self):
+        """
+        Create the initial configuration section.
+        """
+        self.build_ui()  # Use centralized UI creation logic
 
     def create_availability_grid(self):
         # Ensure availability lists match the number of locations
@@ -67,32 +118,32 @@ class GameGUI:
         for j, player in enumerate(self.availability.keys()):
             entry = Entry(self.master)
             entry.insert(0, player)
-            entry.grid(row=1, column=j + 2)  # Shifted to the right by 1 column
+            entry.grid(row=2, column=j + 2)  # Shifted to the right by 1 column
             self.player_entries[player] = entry
 
         for i, location in enumerate(self.locations):
-            remove_button = Button(self.master, text="Remove", command=lambda loc=location: self.remove_location(loc))
-            remove_button.grid(row=i + 2, column=0)
+            remove_button = Button(self.master, text=self.lang["remove"], command=lambda loc=location: self.remove_location(loc))
+            remove_button.grid(row=i + 3, column=0)
 
             entry = Entry(self.master)
             entry.insert(0, location)
-            entry.grid(row=i + 2, column=1)
+            entry.grid(row=i + 3, column=1)
             self.grid_labels[location] = entry
             self.location_entries[location] = entry
 
             for j, player in enumerate(self.availability.keys()):
                 var = StringVar(self.master)
-                var.set("Available" if self.availability[player][i] else "Unavailable")
-                option_menu = OptionMenu(self.master, var, "Available", "Unavailable")
-                option_menu.grid(row=i + 2, column=j + 2)
+                var.set(self.lang["available"] if self.availability[player][i] else self.lang["unavailable"])
+                option_menu = OptionMenu(self.master, var, self.lang["available"], self.lang["unavailable"])
+                option_menu.grid(row=i + 3, column=j + 2)
                 if player not in self.availability_vars:
                     self.availability_vars[player] = []
                 self.availability_vars[player].append(var)
 
         # Add remove buttons below each player
         for j, player in enumerate(self.availability.keys()):
-            remove_button = Button(self.master, text="Remove", command=lambda ply=player: self.remove_player(ply))
-            remove_button.grid(row=len(self.locations) + 3, column=j + 2)
+            remove_button = Button(self.master, text=self.lang["remove"], command=lambda ply=player: self.remove_player(ply))
+            remove_button.grid(row=len(self.locations) + 4, column=j + 2)
 
     def remove_location(self, location):
         index = self.locations.index(location)
@@ -124,24 +175,29 @@ class GameGUI:
         Check if locations are unique and if half of the locations start with "THUIS".
         """
         if len(self.locations) != len(set(self.locations)):
-            raise ValueError("Locaties moeten uniek zijn.")
+            raise ValueError(self.lang["error_locations_unique"])  # Use language string for unique locations error
         
         # Skip the "THUIS" check for the 'beker' game type
         if self.game_type_var.get() != "beker":
             thuis_count = sum(1 for loc in self.locations if loc.startswith("THUIS"))
             if thuis_count < len(self.locations) // 2:
-                raise ValueError("Minimaal de helft van de locaties moet beginnen met 'THUIS'.")
+                raise ValueError(self.lang["error_locations_thuis"])  # Use language string for "THUIS" locations error
 
     def update_grid(self):
+        """
+        Update the grid layout and refresh the UI.
+        """
         game_type = self.game_type_var.get()  # Preserve the selected game type
-        player_names = {player: entry.get() for player, entry in self.player_entries.items() if player in self.availability}  # Preserve player names
-        location_names = {location: entry.get() for location, entry in self.location_entries.items() if location in self.locations}  # Preserve location names
+        player_names = {player: entry.get() for player, entry in self.player_entries.items() if player in self.availability}
+        location_names = {location: entry.get() for location, entry in self.location_entries.items() if location in self.locations}
         self.clear_grid()
+
+        self.build_ui()  # Use centralized UI creation logic
+
         if self.game_type_var.get() == "beker":
-            self.locations = self.locations[:3]  # Ensure only 3 locations are displayed
-        self.create_availability_grid()
+            self.locations = self.locations[:3]
         self.add_buttons()
-        self.game_type_var.set(game_type)  # Restore the selected game type
+        self.game_type_var.set(game_type)
         for player, name in player_names.items():
             self.player_entries[player].delete(0, "end")
             self.player_entries[player].insert(0, name)
@@ -162,32 +218,14 @@ class GameGUI:
                 widget.destroy()
 
     def add_buttons(self):
-        self.add_player_button = Button(self.master, text="Add Player", command=self.add_player)
+        self.add_player_button = Button(self.master, text=self.lang["add_player"], command=self.add_player)
         self.add_player_button.grid(row=len(self.locations) + 4, column=0)
 
-        self.add_location_button = Button(self.master, text="Add Location", command=self.add_location)
+        self.add_location_button = Button(self.master, text=self.lang["add_location"], command=self.add_location)
         self.add_location_button.grid(row=len(self.locations) + 4, column=1)
 
-        self.generate_button = Button(self.master, text="Generate Schedule", command=self.generate_schedule)
+        self.generate_button = Button(self.master, text=self.lang["generate_schedule"], command=self.generate_schedule)
         self.generate_button.grid(row=len(self.locations) + 5, column=0, columnspan=2)
-
-        self.max_consecutive_games_label = Label(self.master, text="Max Consecutive Games:")
-        self.max_consecutive_games_label.grid(row=0, column=2)
-        
-        self.max_consecutive_games_menu = OptionMenu(self.master, self.max_consecutive_games_var, *range(1, len(self.locations) + 1))
-        self.max_consecutive_games_menu.grid(row=0, column=3)
-
-        self.max_games_label = Label(self.master, text="Max Games:")
-        self.max_games_label.grid(row=0, column=4)
-
-        self.max_games_menu = OptionMenu(self.master, self.max_games_var, *range(1, len(self.locations) + 1))
-        self.max_games_menu.grid(row=0, column=5)
-
-        self.game_type_label = Label(self.master, text="Select Game Type:")
-        self.game_type_label.grid(row=0, column=0)
-
-        self.game_type_menu = OptionMenu(self.master, self.game_type_var, "duo", "trio", "squad", "beker", command=self.update_display)
-        self.game_type_menu.grid(row=0, column=1)
 
     def update_display(self, selected_game_type):
         # Update the default values for max_consecutive_games and max_games based on the selected game type
@@ -198,17 +236,22 @@ class GameGUI:
         if selected_game_type == "beker":
             self.locations = self.current_config["locations"][:3]  # Limit to 3 locations for "beker"
         else:
-            self.locations = self.current_config["locations"].copy()  # Restore the full list of locations
+            self.locations = ["THUIS1", "UIT1", "THUIS2", "UIT2", "THUIS3", "UIT3", "THUIS4", "UIT4", "THUIS5", "UIT5"]  # Reset to default locations
         
         self.update_grid()  # Update the grid to reflect the changes
         
         # Clear the schedule label and back button if they are displayed
         if self.schedule_text_widget:
             self.schedule_text_widget.grid_remove()
-        if hasattr(self, 'back_button') and self.back_button.winfo_exists():
-            self.back_button.grid_remove()
-        if hasattr(self, 'rerun_button') and self.rerun_button.winfo_exists():
-            self.rerun_button.grid_remove()
+
+    def update_language(self, selected_language):
+        """
+        Update the language of the application based on the selected language.
+        """
+        set_language(selected_language)  # Use set_language to update the global language
+        self.lang = LANGUAGES[get_language()]  # Reload language strings dynamically
+        logging.info(f"Language updated to: {selected_language}")  # Log the language change
+        self.update_grid()  # Refresh the grid to apply the new language
 
     def update_max_values(self):
         self.max_consecutive_games_menu['menu'].delete(0, 'end')
@@ -222,11 +265,11 @@ class GameGUI:
         try:
             # Ensure locations and availability are consistent
             locations = [entry.get() for entry in self.grid_labels.values()]
-            availability = {self.player_entries[player].get(): [var.get() == "Available" for var in vars] for player, vars in self.availability_vars.items()}
+            availability = {self.player_entries[player].get(): [var.get() == self.lang["available"] for var in vars] for player, vars in self.availability_vars.items()}
             if len(locations) != len(self.locations):
-                raise ValueError("Mismatch between locations and grid entries.")
+                raise ValueError(self.lang["error_mismatch"])
             if any(len(avail) != len(locations) for avail in availability.values()):
-                raise ValueError("Mismatch between availability and locations.")
+                raise ValueError(self.lang["error_availability"])
 
             # Update current_config to reflect the latest changes
             self.current_config["locations"] = locations.copy()
@@ -241,7 +284,7 @@ class GameGUI:
             check_availability_length(locations, availability)
             check_available_players_for_location(locations, availability)
             schedule, code_runs = create_schedule(locations, availability, required_players, max_consecutive_games, game_type, max_games)
-            logging.info("Schedule successfully generated.")  # Log success message
+            logging.info(self.lang["schedule_success"])  # Log success message
             self.display_schedule(schedule, availability, code_runs)
         except ValueError as e:
             logging.error(f"ValueError: {e}")
@@ -265,18 +308,17 @@ class GameGUI:
             if self.schedule_text_widget:
                 self.schedule_text_widget.config(state="normal")
                 self.schedule_text_widget.delete("1.0", "end")
-                self.schedule_text_widget.insert("1.0", f"Unexpected error: {str(e)}")
+                self.schedule_text_widget.insert("1.0", f"{self.lang['unexpected_error']} {str(e)}")
                 self.schedule_text_widget.config(state="disabled")
                 self.schedule_text_widget.grid()
 
     def display_schedule(self, schedule, availability, code_runs):
-        # Ensure the schedule_text_widget is initialized and visible
+        """
+        Display the schedule below the configuration section.
+        """
         if self.schedule_text_widget is None:
             self.schedule_text_widget = Text(self.master, wrap="none", height=20, width=100)
-        self.schedule_text_widget.grid(row=len(self.locations) + 6, column=0, columnspan=6)
-
-        self.clear_grid()
-        reset_code_runs()
+            self.schedule_text_widget.grid(row=len(self.locations) + 6, column=0, columnspan=6, pady=10)
 
         players = list(availability.keys())
         home_away_count = {player: {"home": 0, "away": 0} for player in availability}
@@ -286,7 +328,7 @@ class GameGUI:
                 home_away_count[player]["home" if loc in home_locations else "away"] += 1
 
         column_width = 10
-        header = "Locatie".ljust(column_width) + "".join([player.ljust(column_width) for player in players])
+        header = self.lang["location"].ljust(column_width) + "".join([player.ljust(column_width) for player in players])
         schedule_text = "-" * len(header) + "\n"
         schedule_text += header + "\n"
         schedule_text += "-" * len(header) + "\n"
@@ -298,45 +340,13 @@ class GameGUI:
             schedule_text += row + "\n"
         
         schedule_text += "-" * len(header) + "\n"
-        schedule_text += "Thuis".ljust(column_width) + "".join([str(home_away_count[player]["home"]).ljust(column_width) for player in players]) + "\n"
-        schedule_text += "Uit".ljust(column_width) + "".join([str(home_away_count[player]["away"]).ljust(column_width) for player in players]) + "\n"
-        schedule_text += "Totaal".ljust(column_width) + "".join([str(home_away_count[player]["home"] + home_away_count[player]["away"]).ljust(column_width) for player in players]) + "\n"
+        schedule_text += self.lang["home"].ljust(column_width) + "".join([str(home_away_count[player]["home"]).ljust(column_width) for player in players]) + "\n"
+        schedule_text += self.lang["away"].ljust(column_width) + "".join([str(home_away_count[player]["away"]).ljust(column_width) for player in players]) + "\n"
+        schedule_text += self.lang["total"].ljust(column_width) + "".join([str(home_away_count[player]["home"] + home_away_count[player]["away"]).ljust(column_width) for player in players]) + "\n"
         schedule_text += "-" * len(header) + "\n"
-        schedule_text += f"Aantal herberekeningen: {code_runs}"
+        schedule_text += f"{self.lang['recalculations']} {code_runs}"  # Use language string for recalculations
 
-        # Update the Text widget with the schedule
-        self.schedule_text_widget.config(state="normal")  # Enable editing to update the text
-        self.schedule_text_widget.delete("1.0", "end")  # Clear existing text
-        self.schedule_text_widget.insert("1.0", schedule_text)  # Insert new text
-        self.schedule_text_widget.config(state="disabled")  # Disable editing to make it read-only
-
-        # Add navigation buttons
-        self.back_button = Button(self.master, text="Back to Config", command=self.show_config)
-        self.back_button.grid(row=len(self.locations) + 7, column=0, columnspan=2)
-
-        self.rerun_button = Button(self.master, text="Rerun", command=self.rerun_schedule)
-        self.rerun_button.grid(row=len(self.locations) + 7, column=2, columnspan=2)
-
-    def rerun_schedule(self):
-        reset_code_runs()  # Reset the code_runs counter
-        self.clear_grid()
-        # Restore locations and availability from the current configuration
-        self.locations = self.current_config["locations"].copy()
-        self.availability = {player: avail.copy() for player, avail in self.current_config["availability"].items()}
-        self.create_availability_grid()
-        self.add_buttons()
-        self.generate_schedule()
-
-    def show_config(self):
-        self.clear_grid()
-        self.create_availability_grid()
-        self.add_buttons()
-        self.game_type_var.set(self.game_type_var.get())  # Restore the selected game type
-        self.update_max_values()
-        self.update_schedule_label_position()
-        if self.schedule_text_widget:
-            self.schedule_text_widget.grid_remove()  # Hide the schedule text widget
-        if hasattr(self, 'back_button') and self.back_button.winfo_exists():
-            self.back_button.grid_remove()  # Hide the back button
-        if hasattr(self, 'rerun_button') and self.rerun_button.winfo_exists():
-            self.rerun_button.grid_remove()  # Hide the rerun button
+        self.schedule_text_widget.config(state="normal")
+        self.schedule_text_widget.delete("1.0", "end")
+        self.schedule_text_widget.insert("1.0", schedule_text)
+        self.schedule_text_widget.config(state="disabled")

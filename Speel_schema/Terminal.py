@@ -16,8 +16,10 @@ Of sla de code op als een Python bestand en voer het uit in een Python omgeving.
 
 from typing import List, Dict
 from src.utils import main
+from src.languages import set_language  # Import set_language to set the global language
 
-game_type: str = "beker"  # duo, trio(regulier), squad(landelijk), beker
+game_type: str = "duo"  # duo, trio(regulier), squad(landelijk), beker
+language: str = "en"  # Options: "en" (English), "nl" (Dutch)
 
 locations: List[str] = ["UIT1", "THUIS1", "UIT2", "THUIS2", "UIT3", "THUIS3", "UIT4", "THUIS4", "UIT5", "THUIS5", "UIT6", "THUIS6"]
 
@@ -30,6 +32,7 @@ availability: Dict[str, List[bool]] = {
     "speler6": [True, True, True, True, True, True, True, True, True, True, True, True],
 }
 
+set_language(language)
 if __name__ == "__main__":
-    main(game_type, locations, availability)
+    main(game_type, locations, availability, language)
 

@@ -1,6 +1,7 @@
 from typing import List, Dict, Tuple
 import logging
 import random
+from .languages import get_translations, set_language
 
 # Configure logging to include line numbers
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s')
@@ -10,6 +11,12 @@ required_players = 0
 max_consecutive_games = 0
 max_games = 0
 code_runs = 0
+
+def get_lang():
+    """
+    Dynamically fetch the latest translations.
+    """
+    return get_translations()
 
 def get_player_availability(availability: Dict[str, List[bool]]) -> Dict[str, int]:
     return {player: sum(avail) for player, avail in availability.items()}
@@ -59,21 +66,10 @@ def create_schedule(
     game_type: str,
     max_games: int
 ) -> Tuple[Dict[str, List[str]], int]:
-    """
-    Create a schedule for the games.
-
-    Args:
-        locations (List[str]): List of locations.
-        availability (Dict[str, List[bool]]): Availability of players.
-        required_players (int): Number of required players.
-        max_consecutive_games (int): Maximum consecutive games a player can play.
-        game_type (str): Type of the game.
-        max_games (int): Maximum games a player can play.
-
-    Returns:
-        Tuple[Dict[str, List[str]], int]: Schedule of games and the number of code runs.
-    """
+    # Reset code_runs at the start of schedule creation
     global code_runs
+    code_runs = 0  # Ensure it starts from 0 for each schedule generation
+
     home_locations = [loc for loc in locations if "THUIS" in loc]
     logging.debug(f"Generating schedule with locations: {locations}, required_players: {required_players}, max_consecutive_games: {max_consecutive_games}, max_games: {max_games}")
     
@@ -88,8 +84,8 @@ def create_schedule(
                     loc, availability, player_matches, consecutive_games, max_games, max_consecutive_games, locations
                 )
                 if len(available_players) < required_players:
-                    logging.warning(f"Not enough available players for location {loc}")
-                    raise ValueError(f"Not enough available players for location {loc}")
+                    logging.warning(get_lang()["error_not_enough_players"].format(location=loc))
+                    raise ValueError(get_lang()["error_not_enough_players"].format(location=loc))
                 
                 selected_players = select_players(loc, available_players, home_away_count, home_locations, required_players, max_consecutive_games)
                 
@@ -102,9 +98,12 @@ def create_schedule(
                 reset_consecutive_games(availability, selected_players, consecutive_games)
             return schedule, code_runs
         except ValueError:
-            code_runs += 1
+            code_runs += 1  # Increment code_runs on each retry
             continue
-    raise RuntimeError(f"Unable to generate a valid schedule. Please adjust the parameters and try again., with locations: {locations}, players {len(availability)}, required_players: {required_players}, max_consecutive_games: {max_consecutive_games}, max_games: {max_games}")
+    raise RuntimeError(get_lang()["error_unable_to_generate_schedule"].format(
+        locations=locations, players=len(availability), required_players=required_players,
+        max_consecutive_games=max_consecutive_games, max_games=max_games
+    ))
 
 def reset_code_runs() -> None:
     """
@@ -203,7 +202,8 @@ def print_schedule_table(
         players (List[str]): List of players.
         home_away_count (Dict[str, Dict[str, int]]): Home and away game count for each player.
     """
-    header = "Locatie".ljust(10) + "".join([player.ljust(10) for player in players])
+    lang = get_lang()  # Fetch the latest translations dynamically
+    header = lang["location"].ljust(10) + "".join([player.ljust(10) for player in players])
     logging.info("-" * len(header))
     logging.info(header)
     logging.info("-" * len(header))
@@ -215,9 +215,9 @@ def print_schedule_table(
         logging.info(row)
     
     logging.info("-" * len(header))
-    logging.info("Thuis".ljust(10) + "".join([str(home_away_count[player]["home"]).ljust(10) for player in players]))
-    logging.info("Uit".ljust(10) + "".join([str(home_away_count[player]["away"]).ljust(10) for player in players]))
-    logging.info("Totaal".ljust(10) + "".join([str(home_away_count[player]["home"] + home_away_count[player]["away"]).ljust(10) for player in players]))
+    logging.info(lang["home"].ljust(10) + "".join([str(home_away_count[player]["home"]).ljust(10) for player in players]))
+    logging.info(lang["away"].ljust(10) + "".join([str(home_away_count[player]["away"]).ljust(10) for player in players]))
+    logging.info(lang["total"].ljust(10) + "".join([str(home_away_count[player]["home"] + home_away_count[player]["away"]).ljust(10) for player in players]))
     logging.info("-" * len(header))
 
 def check_availability_length(
@@ -236,7 +236,7 @@ def check_availability_length(
     """
     for player, avail in availability.items():
         if len(locations) != len(avail):
-            raise ValueError(f"Invoer mismatch voor speler {player}: {len(locations)} locaties, {len(avail)} ingevoerde beschikbaarheden")
+            raise ValueError(get_lang()["error_availability_length"].format(player=player, locations=len(locations), availabilities=len(avail)))
 
 def check_available_players_for_location(
     locations: List[str],
@@ -255,7 +255,7 @@ def check_available_players_for_location(
     for loc in locations:
         available_players = [player for player, avail in availability.items() if avail[locations.index(loc)]]
         if len(available_players) < required_players:
-            raise ValueError(f"Niet genoeg spelers beschikbaar voor locatie {loc} ({len(available_players)} beschikbaar, {required_players} nodig)")
+            raise ValueError(get_lang()["error_not_enough_players"].format(location=loc))
 
 def check_locations(locations: List[str]) -> None:
     """
@@ -268,16 +268,25 @@ def check_locations(locations: List[str]) -> None:
         ValueError: If locations are not unique or if half of the locations do not start with "THUIS".
     """
     if len(locations) != len(set(locations)):
-        raise ValueError("Locaties moeten uniek zijn.")
+        raise ValueError(get_lang()["error_locations_unique"])  # Use language string for unique locations error
     
     thuis_count = sum(1 for loc in locations if loc.startswith("THUIS"))
     if thuis_count < len(locations) // 2:
-        raise ValueError("Minimaal de helft van de locaties moet beginnen met 'THUIS'.")
-    
-def main(game_type: str, locations: List[str], availability: Dict[str, List[bool]]) -> None:
+        raise ValueError(get_lang()["error_locations_thuis"])  # Use language string for "THUIS" locations error
+
+def main(game_type: str, locations: List[str], availability: Dict[str, List[bool]], language: str = "nl") -> None:
     """
     Main function to create and print the schedule.
+
+    Args:
+        game_type (str): The type of game.
+        locations (List[str]): List of locations.
+        availability (Dict[str, List[bool]]): Availability of players.
+        language (str): Language code ("en" or "nl").
     """
+    set_language(language)  # Set the language globally
+    logging.info(f"Language set to: {language}")  # Log the language change
+
     # Set global variables based on game type
     set_required_players(game_type)
     set_max_consecutive_games(game_type)
@@ -288,7 +297,7 @@ def main(game_type: str, locations: List[str], availability: Dict[str, List[bool
     check_available_players_for_location(locations, availability)
     try:
         schedule, code_runs = create_schedule(locations, availability, required_players, max_consecutive_games, game_type, max_games)
-        logging.info("Schedule successfully generated.")  # Log success message
+        logging.info(get_lang()["schedule_success"])  # Log success message
     except RuntimeError as e:
         logging.error(str(e))
         return
@@ -299,4 +308,4 @@ def main(game_type: str, locations: List[str], availability: Dict[str, List[bool
         for player in schedule[loc]:
             home_away_count[player]["home" if loc in home_locations else "away"] += 1
     print_schedule_table(schedule, players, home_away_count)
-    logging.info(f"Aantal herberekeningen: {code_runs}")
+    logging.info(f"{get_lang()['recalculations']} {code_runs}")  # Use language string for recalculations
