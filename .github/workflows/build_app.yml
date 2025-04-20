@@ -9,19 +9,25 @@ on:
 jobs:
   build:
     name: Build and Package
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.arch }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - arch: ubuntu-latest
+            arch_friendly: linux
+          - arch: macos-latest
+            arch_friendly: Mac
+          - arch: windows-latest
+            arch_friendly: Windows
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: "3.9"
+        python-version: "3.13"
 
     - name: Install dependencies
       run: |
@@ -35,24 +41,25 @@ jobs:
       shell: bash
 
     - name: Archive build artifacts
-      if: startsWith(matrix.os, 'windows')
+      if: startsWith(matrix.arch, 'windows')
       run: |
         mkdir -p dist
-        mv dist/Gui.exe dist/app-${{ matrix.os }}.exe
+        mv dist/Gui.exe dist/app-${{ matrix.arch }}.exe
       shell: bash
 
     - name: Archive build artifacts (macOS/Linux)
-      if: "!startsWith(matrix.os, 'windows')"
+      if: false == startsWith(matrix.arch, 'windows')
       run: |
         mkdir -p dist
-        mv dist/Gui dist/app-${{ matrix.os }}
+        mv dist/Gui dist/app-${{ matrix.arch }}
       shell: bash
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: build-${{ matrix.os }}
+        name: build-artifacts
         path: dist/
+        if-no-files-found: error
 
   release:
     name: Create Release
@@ -60,9 +67,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Download build artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
-        name: build-${{ matrix.os }}
+        name: build-artifacts
         path: dist/
 
     - name: Create GitHub Release
