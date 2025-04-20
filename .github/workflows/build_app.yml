@@ -25,25 +25,27 @@ jobs:
 
     - name: Install dependencies
       run: |
+        pip install -r Speel_schema/requirements.txt
         pip install pyinstaller
 
     - name: Build executable
       run: |
-        pyinstaller --onefile your_script.py
+        pyinstaller --onefile --noconsole \
+          --add-data "Speel_schema/src/*:src" Speel_schema/Gui.py
       shell: bash
 
     - name: Archive build artifacts
       if: startsWith(matrix.os, 'windows')
       run: |
         mkdir -p dist
-        mv dist/your_script.exe dist/app-${{ matrix.os }}.exe
+        mv dist/Gui.exe dist/app-${{ matrix.os }}.exe
       shell: bash
 
     - name: Archive build artifacts (macOS/Linux)
       if: "!startsWith(matrix.os, 'windows')"
       run: |
         mkdir -p dist
-        mv dist/your_script dist/app-${{ matrix.os }}
+        mv dist/Gui dist/app-${{ matrix.os }}
       shell: bash
 
     - name: Upload artifacts
